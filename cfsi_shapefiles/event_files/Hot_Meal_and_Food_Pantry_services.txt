@@ -1,0 +1,43 @@
+FID,Name,Food_Bank,Longitude,Latitude,Foodbank_R,Address,hours_of_o,FP_and_HM
+0,Center For Lay Ministries,FP,-85.739588800000007,38.273975600000000,"Must live in Clark or Floyd Co. ID, mail, utility bill, or renter's agreement.","213 E Maple St, Jeffersonville, IN 47130",Monday through Friday 9 am to 3:30 pm,130.0
+1,Community Kitchen Inc,HM-FP,-85.749846599999998,38.287285400000002, ,"1611 Spring St,",Monday through Friday 11:30 am to 1 pm,30.0
+2,Hope Southern Indiana,FP,-85.826605299999997,38.296214100000000, ,"1200 Bono Rd,",Monday through Friday 9 am to 3:30 pm,130.0
+3,Holy Family Catholic Church (In Heaven's Eyes),NA,-85.837627999999995,38.309866000000000,"By appointment, call ahead (812) 944 - 8283, food intake on Weds and Fri",113 W Daisy Ln,By appointment,NA
+4,Faith Harvest,FP,-85.985257200000007,38.365219799999998, ,6310 Buttontown Rd,Wednesday from 10 am to 1 pm,12.0
+5,Community Action Partnership (Community Action of Southern Indiana),HM,-85.722387400000002,38.288869300000002, ,1613 E 8th St,Sunday from 7-8:30 am,6.0
+6,Centenary United Methodist,HM-FP,-85.820874399999994,38.287020800000001, ,309 E Spring St,Tuesday 10am - 2pm and hotmeals on Sunday at 4:30 - ??,24.0
+7,Charlestown Road Southern Ministries,FP,-85.808472399999999,38.308283699999997,"By appointment, only 1 appointment per quarter year",2404 Charlestown Rd,Monday 5:30 - 6:30 pm,4.0
+8,Colgate Baptist Ministry,FP,-85.759037599999999,38.279147100000003,"Entrance through back door, daycare in front. Must provide ID indicating local residence.",125 E Montgomery,Every Monday 10 am to 12:30 pm,10.0
+9,First Baptist Church (Hope Center),FP,-85.667840400000003,38.450246300000003,Every person who is new to the Hope Center hears the gospel explained to them in a clear way.,930 Market St,Monday and Thursday 1 - 3 pm,16.0
+10,Northside Christian Church,FP,-85.795361000000000,38.353954999999999,May only come once per month,4407 Charlestown Rd,Tuesday and Thursday 5:30 - 7 pm,12.0
+11,Oak Park Christian Ministries,FP,-85.698404999999994,38.305965000000000,"Photo ID or proof of address (indicated in phone call that they do not turn people away, regardless of these conditions)",3200 Holman's Ln.,Wednesday from 9 am - 11:30 am,10.0
+12,North Clark Outreach Center,FP,-85.658750999999995,38.443699000000002,"Services all of northern Clark County (Charlestown, Henryville, Otisco, New Washington, etc)",240 Harrison St.,Every Weds from 10:30 am - 12:30 pm and the first and third Tuesdays of the month from 5:30 pm to 7:30 pm,14.0
+13,Pearl Baptist Church,HM,-85.814843800000006,38.290607999999999,"Anyone welcome, food served until stock exhausted or all fed.",515 E. 10th St.,Every Weds starting at 5:30-??,8.0
+14,Salvation Army New Albany,FP,-85.835581000000005,38.308509999999998, ,2300 Green Valley Rd.,Monday through Friday 9 - 12 am and 1 - 4 pm,120.0
+15,Salvation Army Clarksville,FP,-85.758621000000005,38.303772000000002,Must be a resident of Clark  County*,528 Little League Blvd.,M T TH and F from 9:00 am - 12 pm and 1 - 4 pm,96.0
+16,Speed Memorial Church,HM-FP,-85.753052999999994,38.410097000000000,Food Pantry and Faith Kitchen held simultaneously,328 U.S. Hwy 31,Every Tuesday from 11 am to 1 pm,8.0
+17,St. Luke's Loaves and Fishes Ministry,HM,-85.737694000000005,38.274549000000000,All welcome,329 Walnut St,Every Saturday 11:30 am to 12:30 pm,4.0
+18,Tri-County Health Coalition,FP,-85.829769999999996,38.295907000000000,sack lunches for homeless youth during normal business hours,1222 State St. Suite 3,11 am to 3 pm every Tuesday,16.0
+19,Walnut Ridge Baptist Church,FP,-85.744780000000006,38.296326000000001, ,6 Franklin St.,Open last Saturday of each month from 9 am - 12 pm,3.0
+20,Open Table Community Dinner (Park Community Church),HM,-85.837016000000006,38.307619000000003, ,2231 Green Valley Rd,First and Third Monday of every month 5 - 6:30 pm,3.0
+21,Revelation Tabernacle,HM,-85.830461999999997,38.281978000000002, ,602 W. Market,First and Third Tuesday of every month 9 am - Noon,6.0
+22,Hour of Power Evangelist Mission,HM,-85.823455999999993,38.283504999999998, ,108 W. Main St.,Tuesday 5:30 to 6:30 pm,4.0
+23,Taste of Love Kitchen,HM,-85.975352999999998,38.294338000000003,Run out of the Celebration Worship Center,8965 State Rd. 64 Georgetown IN,Tuesdays 6-7:30 pm,6.0
+24,St. Marks United Church of Christ,HM,-85.821315999999996,38.286298000000002, ,222 E. Spring St,Saturday 12 - 1 pm,4.0
+25,Unfinished Church,HM,-85.810522000000006,38.292524999999998, ,1421 E. Elm St,Fourth Saturday 5:30 - 6:30 pm,1.0
+26,Northside Church of Christ,HM-FP,-85.716656000000000,38.313575000000000,"Food Pantry open to victims of fire, flood, and unemployment",2510 E 10th St.,Pantry and hotmeal open last Saturday of the month from 4:30-6 pm,1.5
+27,First Presbyterian Church (Exit 0 Program),HM,-85.736198000000002,38.273409000000001,Mobile hotmeal service,222 Walnut St,Last Thursday of the month beginning at 5:45,1.5
+28,West Maple Baptist Church (Exit 0 Program),HM,-85.744731999999999,38.271031000000001,Mobile hotmeal service,403 W Maple St,Every Sunday of the month after Church services which begin at 4 pm,4.0
+29,North Corner of Federal and Spring St. (Exit 0 Program),HM,-85.742666000000000,38.275257000000003,Mobile hotmeal service,N/A,Every Wednesday at 8 pm,4.0
+30,Pekin Love Center Tabernacle of God Church,HM-FP,-86.013863999999998,38.504261000000000, ,173 Main St,"Pantry every Weds 9am - 2 pm, Hot meal every Weds and Thurs from 12 - 12:45 pm",26
+31,Pekin Senior Citizens Center,SC,-86.014938999999998,38.501573999999998,Senior center meal (restricted to seniors),492 E Poplar St.,Call for hours,N/A
+32,Washington County Mobile Pantry (United Methodist Church),FP,-86.093393000000006,38.606042000000002,Mobile Food Pantry,118 Fair Street (County Fair Grounds),3rd Saturday of the month 10 am - ??,2.0
+33,Haleysburg Mobile Pantry (Church of Nazarene),FP,-86.147910999999993,38.752296999999999,Mobile Food Pantry,10084 N. Haleysburg Rd ,1st Friday of the month 3pm - ??,2.0
+34,Pekin Mobile Pantry,FP,-86.020497000000006,38.506462999999997,Mobile Food Pantry,267 S. Shorts Corner Rd,1st Friday of the month 10am - ??,2.0
+35,Hardinsburg Senior Center,SC,-86.279874000000007,38.459648000000001,Senior center meal (restricted to seniors),183 W Cheshire Lane,Meals Delivered approximately 10:30 am,N/A
+36,Scott County Clearinghouse,FP,-85.796283000000003,38.703164000000001,TEFAP Participant (The Emergency Food Assistance Program),1057 Community Way,Monday - Wednesday 1:30 pm - 4:30 pm and Thursday 9 am - 12 pm and 6 pm - 8 pm,56.0
+37,Harrison County Community Services Inc,FP,-86.129599999999996,38.212091999999998,TEFAP Participant (The Emergency Food Assistance Program),101 Highway 62 W,Monday - Friday 8:30 am - 4:30 pm,160.0
+38,South Harrison Community Development,FP,0.000000000000000,0.000000000000000,"They do not have a spatial location, PO box 126, Elizabeth, IN. 47117. Appointment only. (812) 969-2079",N/A,N/A,N/A
+39,South Harrison Community Food Pantry (Laconia),FP,-86.086484999999996,38.032138000000003, ,11539 Jackson Street,3rd Saturday of the month 9 - 10 am,1.0
+40,South Harrison Community Food Pantry (Elizabeth),FP,-85.974012000000002,38.121268999999998, ,Highway 11,3rd Saturday of the month 9 - 10 am,1.0
+41,Harrison County Mobile Pantry,FP,-86.156684999999996,38.304116999999998, ,1760 Lost Creek Rd,2nd Saturday of the month 10 am,1.0

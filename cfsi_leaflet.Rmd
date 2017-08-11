@@ -1,0 +1,199 @@
+---
+title: "CFSI Map"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(leaflet)
+library(rgdal)
+library(RColorBrewer)
+library(htmlwidgets)
+library(tidyverse)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+```{r}
+cfsi_census <- readOGR(dsn = "C:/Users/natek/studio_gdrive/cfsi_map/cfsi_shapefiles/shapefiles/Selected_Tract_Variables.shp", layer = "Selected_Tract_Variables",
+                 GDAL1_integer64_policy = TRUE)
+```
+Cutting out Washington County
+```{r}
+cfsi_census <- cfsi_census[cfsi_census@data$CNTY_name == "Clark" | cfsi_census@data$CNTY_name == "Floyd", ]
+```
+
+
+
+
+Rescaling
+```{r}
+rescale <- function(x){new_value <- x*100}
+cfsi_census@data[ ,c(30, 32:36)] = apply(cfsi_census@data[ ,c(30, 32:36)], 2, rescale)
+```
+
+Labels for leaflet mapping
+
+```{r}
+cfsi_census@data$l_line1 <- paste("Tract #:", cfsi_census@data$TRACT, "in")
+cfsi_census@data$l_line2 <- paste(cfsi_census@data$CNTY_name, "County")
+
+cfsi_census@data$l_line3_pov <- paste("Poverty: ", round(cfsi_census@data$Pct_In_Pov, 0), "%", sep = "")
+cfsi_census@data$l_line3_unemp <- paste("Unemployment: ", round(cfsi_census@data$PCT_unempl, 0), "%", sep = "")
+cfsi_census@data$l_line3_inc <- paste("Median Household Income: ", "$", round(cfsi_census@data$Median_HH, 0), sep = "")
+cfsi_census@data$l_line3_educ <- paste("Bachelor's Degree or Higher: ", round(cfsi_census@data$PCT_BA_or, 0), "%", sep = "")
+cfsi_census@data$l_line3_dense <- paste("Population per square mile: ", round(cfsi_census@data$pop_per_MI, 0), sep = "")
+
+
+labels_pov <- sprintf(
+  "%s<br/>%s<br/>%s",
+  cfsi_census@data$l_line1, cfsi_census@data$l_line2, cfsi_census@data$l_line3_pov
+) %>% lapply(htmltools::HTML)
+
+labels_unemp <- sprintf(
+  "%s<br/>%s<br/>%s",
+  cfsi_census@data$l_line1, cfsi_census@data$l_line2, cfsi_census@data$l_line3_unemp
+) %>% lapply(htmltools::HTML)
+
+labels_inc <- sprintf(
+  "%s<br/>%s<br/>%s",
+  cfsi_census@data$l_line1, cfsi_census@data$l_line2, cfsi_census@data$l_line3_inc
+) %>% lapply(htmltools::HTML)
+
+labels_dense <- sprintf(
+  "%s<br/>%s<br/>%s",
+  cfsi_census@data$l_line1, cfsi_census@data$l_line2, cfsi_census@data$l_line3_dense
+) %>% lapply(htmltools::HTML)
+
+labels_educ <- sprintf(
+  "%s<br/>%s<br/>%s",
+  cfsi_census@data$l_line1, cfsi_census@data$l_line2, cfsi_census@data$l_line3_educ
+) %>% lapply(htmltools::HTML)
+
+```
+
+Color Palettes
+```{r}
+pal <- brewer.pal(9, "BuPu")
+
+pal_pov <- colorNumeric(
+  palette = pal,
+  domain = cfsi_census@data$Pct_In_Pov
+)
+
+pal_unemp <- colorNumeric(
+  palette = pal,
+  domain = cfsi_census@data$PCT_unempl
+)
+
+pal_inc <- colorNumeric(
+  palette = pal,
+  domain = cfsi_census@data$Median_HH
+)
+
+pal_dense <- colorNumeric(
+  palette = pal,
+  domain = cfsi_census@data$pop_per_MI
+)
+
+pal_educ <- colorNumeric(
+  palette = pal,
+  domain = cfsi_census@data$PCT_BA_or
+)
+```
+Overlay layers
+```{r}
+cfsi_ebt <- readOGR(dsn = "C:/Users/natek/studio_gdrive/cfsi_map/cfsi_shapefiles/shapefiles/EBT_and_Fresh_produce_locations.shp", layer = "EBT_and_Fresh_produce_locations",
+                 GDAL1_integer64_policy = TRUE)
+
+cfsi_samhsa <- readOGR(dsn = "C:/Users/natek/studio_gdrive/cfsi_map/cfsi_shapefiles/shapefiles/Samhsa_Facilities.shp", layer = "Samhsa_Facilities",
+                 GDAL1_integer64_policy = TRUE)
+
+cfsi_designated_places <- readOGR(dsn = "C:/Users/natek/studio_gdrive/cfsi_map/cfsi_shapefiles/shapefiles/Census_Designated_Places.shp", layer = "Census_Designated_Places",
+                 GDAL1_integer64_policy = TRUE)
+
+cfsi_alc <- readOGR(dsn = "C:/Users/natek/studio_gdrive/cfsi_map/cfsi_shapefiles/shapefiles/Adult_Learning_Centers.shp", layer = "Adult_Learning_Centers",
+                 GDAL1_integer64_policy = TRUE)
+
+cfsi_tarc <- readOGR(dsn = "C:/Users/natek/studio_gdrive/cfsi_map/cfsi_shapefiles/shapefiles/Indiana_Tarc_Routes.shp", layer = "Indiana_Tarc_Routes",
+                 GDAL1_integer64_policy = TRUE)
+```
+```{r}
+ebt_df <- subset(cfsi_ebt@data, County == "CLARK" | County == "FLOYD"  )
+ebt_fresh_df <- subset(ebt_df, Sells_fres == 1)
+cfsi_samhsa <- cfsi_samhsa[cfsi_samhsa@data$county == "Clark" | cfsi_samhsa@data$county == "Floyd", ]
+sa_df <- subset(cfsi_samhsa@data, type_facil == "SA")
+mh_df <- subset(cfsi_samhsa@data, type_facil == "MH")
+cfsi_alc <- cfsi_alc[1:10, ] #rows 11 to 16 are full of NAs and zeros
+cfsi_alc <- cfsi_alc[cfsi_alc@data$County == "Clark" | cfsi_alc@data$County == "Floyd", ]
+
+```
+
+
+
+Leaflet map
+```{r}
+map1 <- leaflet(cfsi_census) %>%
+  addTiles() %>%
+  addPolygons(group = "Poverty", color = "#444444", weight = 1, smoothFactor = 0.5,
+              opacity = 0.5, fillOpacity = 0.5,
+              fillColor = ~pal_pov(Pct_In_Pov),
+              label = labels_pov,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto"))%>%
+  addPolygons(group = "Median Household Income", color = "#444444", weight = 1, smoothFactor = 0.5,
+              opacity = 0.5, fillOpacity = 0.5,
+              fillColor = ~pal_inc(Median_HH),
+              label = labels_inc,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto"))%>%
+  addPolygons(group = "Unemployment", color = "#444444", weight = 1, smoothFactor = 0.5,
+              opacity = 0.5, fillOpacity = 0.5,
+              fillColor = ~pal_unemp(PCT_unempl),
+              label = labels_unemp,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto"))%>%
+  addPolygons(group = "Bachelor's Degree", color = "#444444", weight = 1, smoothFactor = 0.5,
+              opacity = 0.5, fillOpacity = 0.5,
+              fillColor = ~pal_educ(PCT_BA_or),
+              label = labels_educ,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto"))%>%
+  addPolygons(group = "Population Density", color = "#444444", weight = 1, smoothFactor = 0.5,
+              opacity = 0.5, fillOpacity = 0.5,
+              fillColor = ~pal_dense(pop_per_MI),
+              label = labels_dense,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto"))%>%
+  addCircleMarkers(data = sa_df, lat = ~latitude, lng = ~longitude, label = ~name1, color = "green", 
+                   group = "Substance Abuse Facilities", radius = 2) %>%
+  addCircleMarkers(data = mh_df, lat = ~latitude, lng = ~longitude, label = ~name1, color = "green", 
+                   group = "Mental Health Centers", radius = 2) %>%
+  addCircleMarkers(data = cfsi_alc@data, lat = ~Latitude, lng = ~Longitude, label = ~Location, color = "green", 
+                   group = "Adult Learning Centers", radius = 2) %>%
+  addCircleMarkers(data = ebt_df, lat = ~Latitude, lng = ~Longitude, label = ~Store_Name, color = "green", 
+                   group = "EBT Location", radius = 2) %>%
+  addCircleMarkers(data = ebt_fresh_df, lat = ~Latitude, lng = ~Longitude, label = ~Store_Name, color = "green", 
+                   group = "EBT Location w/ Fresh Produce", radius = 2) %>%
+  addLayersControl(
+    overlayGroups = c("Adult Learning Centers", "Substance Abuse Facilities", "Mental Health Centers", "EBT Location", "EBT Location w/ Fresh Produce"),
+    baseGroups = c("Poverty", "Median Household Income", "Unemployment", "Bachelor's Degree", "Population Density"),
+    options = layersControlOptions(collapsed = FALSE))
+
+saveWidget(map1, "C:/users/natek/studio_gdrive/cfsi_map/cfsi_census.html")
+
+
+```
+
