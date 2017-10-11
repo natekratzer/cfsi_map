@@ -12,27 +12,34 @@ library(leaflet)
 library(rgdal)
 library(RColorBrewer)
 library(htmlwidgets)
+library(stringi)
 library(tidyverse)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+Reading in Census Base Layers
 ```{r}
-cfsi_census <- readOGR(dsn = "C:/Users/natek/studio_gdrive/cfsi_map/cfsi_shapefiles/shapefiles/Selected_Tract_Variables.shp", layer = "Selected_Tract_Variables",
+cfsi_census <- readOGR(dsn = "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_shapefiles/shapefiles/Selected_Tract_Variables.shp", layer = "Selected_Tract_Variables",
                  GDAL1_integer64_policy = TRUE)
 ```
+
 Cutting out Washington County
 ```{r}
 cfsi_census <- cfsi_census[cfsi_census@data$CNTY_name == "Clark" | cfsi_census@data$CNTY_name == "Floyd", ]
 ```
-
-
-
 
 Rescaling
 ```{r}
 rescale <- function(x){new_value <- x*100}
 cfsi_census@data[ ,c(30, 32:36)] = apply(cfsi_census@data[ ,c(30, 32:36)], 2, rescale)
 ```
+
+Reconfiguring base data
+```{r}
+cfsi_census@data$hs <- cfsi_census@data$PCT_HS_GED+cfsi_census@data$PCT_Some_C+cfsi_census@data$PCT_BA_or
+cfsi_census@data$assoc <- cfsi_census@data$PCT_Associ+cfsi_census@data$PCT_BA_or
+
+```
+
 
 Labels for leaflet mapping
 
@@ -44,6 +51,8 @@ cfsi_census@data$l_line3_pov <- paste("Poverty: ", round(cfsi_census@data$Pct_In
 cfsi_census@data$l_line3_unemp <- paste("Unemployment: ", round(cfsi_census@data$PCT_unempl, 0), "%", sep = "")
 cfsi_census@data$l_line3_inc <- paste("Median Household Income: ", "$", round(cfsi_census@data$Median_HH, 0), sep = "")
 cfsi_census@data$l_line3_educ <- paste("Bachelor's Degree or Higher: ", round(cfsi_census@data$PCT_BA_or, 0), "%", sep = "")
+cfsi_census@data$l_line3_hs <- paste("At least High School or GED: ", round(cfsi_census@data$hs, 0), "%", sep = "")
+cfsi_census@data$l_line3_assoc <- paste("Associate's Degree or Higher: ", round(cfsi_census@data$assoc, 0), "%", sep = "")
 cfsi_census@data$l_line3_dense <- paste("Population per square mile: ", round(cfsi_census@data$pop_per_MI, 0), sep = "")
 
 
@@ -72,11 +81,21 @@ labels_educ <- sprintf(
   cfsi_census@data$l_line1, cfsi_census@data$l_line2, cfsi_census@data$l_line3_educ
 ) %>% lapply(htmltools::HTML)
 
+labels_hs <- sprintf(
+  "%s<br/>%s<br/>%s",
+  cfsi_census@data$l_line1, cfsi_census@data$l_line2, cfsi_census@data$l_line3_hs
+) %>% lapply(htmltools::HTML)
+
+labels_assoc <- sprintf(
+  "%s<br/>%s<br/>%s",
+  cfsi_census@data$l_line1, cfsi_census@data$l_line2, cfsi_census@data$l_line3_assoc
+) %>% lapply(htmltools::HTML)
+
 ```
 
 Color Palettes
 ```{r}
-pal <- brewer.pal(9, "BuPu")
+pal <- brewer.pal(9, "Blues")
 
 pal_pov <- colorNumeric(
   palette = pal,
@@ -102,26 +121,44 @@ pal_educ <- colorNumeric(
   palette = pal,
   domain = cfsi_census@data$PCT_BA_or
 )
+
+pal_hs <- colorNumeric(
+  palette = pal,
+  domain = cfsi_census@data$hs
+)
+
+pal_assoc <- colorNumeric(
+  palette = pal,
+  domain = cfsi_census@data$assoc
+)
 ```
+
 Overlay layers
 ```{r}
-cfsi_ebt <- readOGR(dsn = "C:/Users/natek/studio_gdrive/cfsi_map/cfsi_shapefiles/shapefiles/EBT_and_Fresh_produce_locations.shp", layer = "EBT_and_Fresh_produce_locations",
+cfsi_ebt <- readOGR(dsn = "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_shapefiles/shapefiles/EBT_and_Fresh_produce_locations.shp", layer = "EBT_and_Fresh_produce_locations",
                  GDAL1_integer64_policy = TRUE)
 
-cfsi_samhsa <- readOGR(dsn = "C:/Users/natek/studio_gdrive/cfsi_map/cfsi_shapefiles/shapefiles/Samhsa_Facilities.shp", layer = "Samhsa_Facilities",
+cfsi_samhsa <- readOGR(dsn = "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_shapefiles/shapefiles/Samhsa_Facilities.shp", layer = "Samhsa_Facilities",
                  GDAL1_integer64_policy = TRUE)
 
-cfsi_designated_places <- readOGR(dsn = "C:/Users/natek/studio_gdrive/cfsi_map/cfsi_shapefiles/shapefiles/Census_Designated_Places.shp", layer = "Census_Designated_Places",
+cfsi_designated_places <- readOGR(dsn = "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_shapefiles/shapefiles/converted_census_designated_places.shp", layer = "converted_census_designated_places",
                  GDAL1_integer64_policy = TRUE)
 
-cfsi_alc <- readOGR(dsn = "C:/Users/natek/studio_gdrive/cfsi_map/cfsi_shapefiles/shapefiles/Adult_Learning_Centers.shp", layer = "Adult_Learning_Centers",
+cfsi_alc <- readOGR(dsn = "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_shapefiles/shapefiles/Adult_Learning_Centers.shp", layer = "Adult_Learning_Centers",
                  GDAL1_integer64_policy = TRUE)
 
-cfsi_tarc <- readOGR(dsn = "C:/Users/natek/studio_gdrive/cfsi_map/cfsi_shapefiles/shapefiles/Indiana_Tarc_Routes.shp", layer = "Indiana_Tarc_Routes",
+cfsi_tarc <- readOGR(dsn = "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_shapefiles/shapefiles/converted_tarc.shp", layer = "converted_tarc",
                  GDAL1_integer64_policy = TRUE)
+
+cfsi_food_pantry <- readOGR(dsn = "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_shapefiles/shapefiles/Hotmeal_and_Food_Pantry_services.shp", layer = "Hotmeal_and_Food_Pantry_services",
+                 GDAL1_integer64_policy = TRUE)
+
+
 ```
+
+Prepping overlay data
 ```{r}
-ebt_df <- subset(cfsi_ebt@data, County == "CLARK" | County == "FLOYD"  )
+ebt_df <- subset(cfsi_ebt@data, County == "CLARK" | County == "FLOYD")
 ebt_fresh_df <- subset(ebt_df, Sells_fres == 1)
 cfsi_samhsa <- cfsi_samhsa[cfsi_samhsa@data$county == "Clark" | cfsi_samhsa@data$county == "Floyd", ]
 sa_df <- subset(cfsi_samhsa@data, type_facil == "SA")
@@ -129,9 +166,165 @@ mh_df <- subset(cfsi_samhsa@data, type_facil == "MH")
 cfsi_alc <- cfsi_alc[1:10, ] #rows 11 to 16 are full of NAs and zeros
 cfsi_alc <- cfsi_alc[cfsi_alc@data$County == "Clark" | cfsi_alc@data$County == "Floyd", ]
 
+#cfsi_food_pantry <- subset(cfsi_food_pantry@data, County == "CLARK" | County == "FLOYD")
+#might have to box out the ones out of those counties
+
+fp_df <- subset(cfsi_food_pantry@data, Food_Bank %in% c("FP", "HM-FP"))
+hm_df <- subset(cfsi_food_pantry@data, Food_Bank %in% c("HM", "HM-FP"))
+
+fp_df <- fp_df %>% 
+  filter(Latitude != 0 & Longitude != 0)
+
+hm_df <- hm_df %>% 
+  filter(Latitude != 0 & Longitude != 0)
+
+fp_df <- fp_df %>%
+  filter(Latitude <= 38.600 & Latitude >= 38.13 &
+    Longitude >= -86.1 & Name != "Pekin Love Center Tabernacle of God Church" &
+      Name != "Pekin Mobile Pantry")
+
+hm_df <- hm_df %>%
+  filter(Latitude <= 38.600 & Latitude >= 38.13 &
+    Longitude >= -86.1 & Name != "Pekin Love Center Tabernacle of God Church")
+
+
+
+```
+
+Labels for food pantries, hot meals, ebt, learning centers, mental health centers, and substance abuse facilities
+```{r}
+# wrap_func <- function(x){paste(stri_wrap(x, 40), collapse = "</br>")}
+# 
+# fp_df$Foodbank_R <- lapply(fp_df$Foodbank_R, wrap_func)
+# hm_df$Foodbank_R <- lapply(hm_df$Foodbank_R, wrap_func)
+# 
+# fp_df$hours_of_o <- lapply(fp_df$hours_of_o, wrap_func)
+# hm_df$hours_of_o <- lapply(hm_df$hours_of_o, wrap_func)
+
+
+fp_l_1 <- fp_df$Name
+fp_l_2 <- fp_df$Address
+fp_l_3 <- paste("Hours:", fp_df$hours_of_o)
+fp_l_4 <- paste("Restrictions:", fp_df$Foodbank_R)
+
+hm_l_1 <- hm_df$Name
+hm_l_2 <- hm_df$Address
+hm_l_3 <- paste("Hours:", hm_df$hours_of_o)
+hm_l_4 <- paste("Restrictions:", hm_df$Foodbank_R)
+
+ebt_l_1 <- ebt_df$Store_Name
+ebt_l_2 <- ebt_df$Address
+ebt_l_3 <- paste(ebt_df$City, ebt_df$State, ebt_df$Zip5)
+
+ebt_f_l_1 <- ebt_fresh_df$Store_Name
+ebt_f_l_2 <- ebt_fresh_df$Address
+ebt_f_l_3 <- paste(ebt_fresh_df$City, ebt_fresh_df$State, ebt_fresh_df$Zip5)
+
+mh_l_1 <- mh_df$name1
+mh_l_2 <- mh_df$street1
+mh_l_3 <- paste(mh_df$city, mh_df$state, mh_df$zip)
+
+sa_l_1 <- sa_df$name1
+sa_l_2 <- sa_df$street1
+sa_l_3 <- paste(sa_df$city, sa_df$state, sa_df$zip)
+
+alc_l_1 <- cfsi_alc@data$Location
+alc_l_2 <- cfsi_alc@data$Address_1
+alc_l_3 <- paste(cfsi_alc@data$City, "IN", cfsi_alc@data$ZIP)
+alc_l_4 <- paste("Phone:", cfsi_alc@data$Phone)
+alc_l_5 <- paste("Hours:", cfsi_alc@data$Hours_of_O)
+
+fp_label <- sprintf(
+  "<style> div.leaflet-popup-content {font-size:24px;}</style><strong/>%s</strong><br/><strong/>%s</strong><br/>%s<br/>%s",
+  fp_l_1, fp_l_2, fp_l_3, fp_l_4
+) %>% lapply(htmltools::HTML)
+
+hm_label <- sprintf(
+  "<style> div.leaflet-popup-content {font-size:24px;}</style><strong/>%s</strong><br/><strong/>%s</strong><br/>%s<br/>%s",
+  hm_l_1, hm_l_2, hm_l_3, hm_l_4
+) %>% lapply(htmltools::HTML)
+
+ebt_label <- sprintf(
+  "<style> div.leaflet-popup-content {font-size:24px;}</style><strong/>%s</strong><br/>%s<br/>%s",
+  ebt_l_1, ebt_l_2, ebt_l_3
+) %>% lapply(htmltools::HTML)
+
+ebt_f_label <- sprintf(
+  "<style> div.leaflet-popup-content {font-size:24px;}</style><strong/>%s</strong><br/>%s<br/>%s",
+  ebt_f_l_1, ebt_f_l_2, ebt_f_l_3
+) %>% lapply(htmltools::HTML)
+
+sa_label <- sprintf(
+  "<style> div.leaflet-popup-content {font-size:24px;}</style><strong/>%s</strong><br/>%s<br/>%s",
+  sa_l_1, sa_l_2, sa_l_3
+) %>% lapply(htmltools::HTML)
+
+mh_label <- sprintf(
+  "<style> div.leaflet-popup-content {font-size:24px;}</style><strong/>%s</strong><br/>%s<br/>%s",
+  mh_l_1, mh_l_2, mh_l_3
+) %>% lapply(htmltools::HTML)
+
+alc_label <- sprintf(
+  "<style> div.leaflet-popup-content {font-size:24px;}</style><strong/>%s</strong><br/><strong/>%s</strong><br/><strong/>%s</strong><br/>%s<br/>%s",
+  alc_l_1, alc_l_2, alc_l_3, alc_l_4, alc_l_5
+) %>% lapply(htmltools::HTML)
+
 ```
 
 
+Setting up labels for census designated places
+```{r}
+places_lat_long <- data.frame(cfsi_designated_places@coords)
+names(places_lat_long) <- c("Longitude", "Latitude")
+places_lat_long$places_names <- cfsi_designated_places@data$NAME
+places_lat_long <- places_lat_long %>% 
+  filter(Latitude >= 38.29580 & Latitude <= 38.56567 &
+    Longitude >= -85.98467)
+
+places_lat_long$html_label <- sprintf(
+  "%s",
+  places_lat_long$places_names
+) %>% lapply(htmltools::HTML)
+
+```
+
+Making Icons
+```{r}
+mental_health_icon <- makeIcon(
+  "C:/Users/natek/studio_gdrive/github/cfsi_map/public_health.png",
+  iconWidth = 20, iconHeight = 20
+)
+
+sa_icon <- makeIcon(
+  "C:/Users/natek/studio_gdrive/github/cfsi_map/bed_icon.png",
+  iconWidth = 20, iconHeight = 20
+)
+
+ebt_icon <- makeIcon(
+  "C:/Users/natek/studio_gdrive/github/cfsi_map/snap_logo.png",
+  iconWidth = 20, iconHeight = 20
+)
+
+alc_icon <- makeIcon(
+  "C:/Users/natek/studio_gdrive/github/cfsi_map/grad_hat.png",
+  iconWidth = 20, iconHeight = 20
+)
+
+produce_icon <- makeIcon(
+  "C:/Users/natek/studio_gdrive/github/cfsi_map/orange_icon.png",
+  iconWidth = 20, iconHeight = 20
+)
+
+fp_icon <- makeIcon(
+  "C:/Users/natek/studio_gdrive/github/cfsi_map/fp_icon.png",
+  iconWidth = 20, iconHeight = 20
+)
+
+hm_icon <- makeIcon(
+  "C:/Users/natek/studio_gdrive/github/cfsi_map/hm_icon.png",
+  iconWidth = 20, iconHeight = 20
+)
+```
 
 Leaflet map
 ```{r}
@@ -143,7 +336,7 @@ map1 <- leaflet(cfsi_census) %>%
               label = labels_pov,
               labelOptions = labelOptions(
                 style = list("font-weight" = "normal", padding = "3px 8px"),
-                textsize = "15px",
+                textsize = "24px",
                 direction = "auto"))%>%
   addPolygons(group = "Median Household Income", color = "#444444", weight = 1, smoothFactor = 0.5,
               opacity = 0.5, fillOpacity = 0.5,
@@ -151,7 +344,7 @@ map1 <- leaflet(cfsi_census) %>%
               label = labels_inc,
               labelOptions = labelOptions(
                 style = list("font-weight" = "normal", padding = "3px 8px"),
-                textsize = "15px",
+                textsize = "24px",
                 direction = "auto"))%>%
   addPolygons(group = "Unemployment", color = "#444444", weight = 1, smoothFactor = 0.5,
               opacity = 0.5, fillOpacity = 0.5,
@@ -159,7 +352,23 @@ map1 <- leaflet(cfsi_census) %>%
               label = labels_unemp,
               labelOptions = labelOptions(
                 style = list("font-weight" = "normal", padding = "3px 8px"),
-                textsize = "15px",
+                textsize = "24px",
+                direction = "auto"))%>%
+  addPolygons(group = "High School or GED", color = "#444444", weight = 1, smoothFactor = 0.5,
+              opacity = 0.5, fillOpacity = 0.5,
+              fillColor = ~pal_hs(hs),
+              label = labels_hs,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "24px",
+                direction = "auto"))%>%
+  addPolygons(group = "Associate's Degree", color = "#444444", weight = 1, smoothFactor = 0.5,
+              opacity = 0.5, fillOpacity = 0.5,
+              fillColor = ~pal_assoc(assoc),
+              label = labels_assoc,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "24px",
                 direction = "auto"))%>%
   addPolygons(group = "Bachelor's Degree", color = "#444444", weight = 1, smoothFactor = 0.5,
               opacity = 0.5, fillOpacity = 0.5,
@@ -167,7 +376,7 @@ map1 <- leaflet(cfsi_census) %>%
               label = labels_educ,
               labelOptions = labelOptions(
                 style = list("font-weight" = "normal", padding = "3px 8px"),
-                textsize = "15px",
+                textsize = "24px",
                 direction = "auto"))%>%
   addPolygons(group = "Population Density", color = "#444444", weight = 1, smoothFactor = 0.5,
               opacity = 0.5, fillOpacity = 0.5,
@@ -175,25 +384,61 @@ map1 <- leaflet(cfsi_census) %>%
               label = labels_dense,
               labelOptions = labelOptions(
                 style = list("font-weight" = "normal", padding = "3px 8px"),
-                textsize = "15px",
+                textsize = "24px",
                 direction = "auto"))%>%
-  addCircleMarkers(data = sa_df, lat = ~latitude, lng = ~longitude, label = ~name1, color = "green", 
-                   group = "Substance Abuse Facilities", radius = 2) %>%
-  addCircleMarkers(data = mh_df, lat = ~latitude, lng = ~longitude, label = ~name1, color = "green", 
-                   group = "Mental Health Centers", radius = 2) %>%
-  addCircleMarkers(data = cfsi_alc@data, lat = ~Latitude, lng = ~Longitude, label = ~Location, color = "green", 
-                   group = "Adult Learning Centers", radius = 2) %>%
-  addCircleMarkers(data = ebt_df, lat = ~Latitude, lng = ~Longitude, label = ~Store_Name, color = "green", 
-                   group = "EBT Location", radius = 2) %>%
-  addCircleMarkers(data = ebt_fresh_df, lat = ~Latitude, lng = ~Longitude, label = ~Store_Name, color = "green", 
-                   group = "EBT Location w/ Fresh Produce", radius = 2) %>%
+ addLabelOnlyMarkers(data = places_lat_long, lat = ~Latitude, lng = ~Longitude, label = ~html_label,
+                      labelOptions = labelOptions(noHide = T, direction = 'top', textOnly = T), group = "Place Names") %>%
+  addPolylines(data = cfsi_tarc, color = "black", weight = 2, group = "TARC Routes") %>%
+  addMarkers(data = sa_df, lat = ~latitude, lng = ~longitude, popup = ~sa_label, icon = sa_icon, 
+                   group = "Substance Abuse Facilities")%>%
+  addMarkers(data = mh_df, lat = ~latitude, lng = ~longitude, popup = ~mh_label, icon = mental_health_icon,
+                   group = "Mental Health Centers") %>%
+  addMarkers(data = cfsi_alc@data, lat = ~Latitude, lng = ~Longitude, popup = ~alc_label, icon = alc_icon, 
+                   group = "Adult Learning Centers") %>%
+  addMarkers(data = ebt_df, lat = ~Latitude, lng = ~Longitude, popup = ~ebt_label, icon = ebt_icon, 
+                   group = "EBT Location") %>%
+  addMarkers(data = ebt_fresh_df, lat = ~Latitude, lng = ~Longitude, popup = ~ebt_f_label, icon = produce_icon, 
+                   group = "EBT Location w/ Fresh Produce") %>%
+  addMarkers(data = fp_df, lat = ~Latitude, lng = ~Longitude, popup = ~fp_label, icon = fp_icon, 
+                   group = "Food Pantry",
+                   popupOptions = labelOptions(direction = "auto")) %>%
+  addMarkers(data = hm_df, lat = ~Latitude, lng = ~Longitude, popup = ~hm_label, icon = hm_icon, 
+                   group = "Hot Meal",
+                   popupOptions = popupOptions(direction = "auto")) %>%
   addLayersControl(
-    overlayGroups = c("Adult Learning Centers", "Substance Abuse Facilities", "Mental Health Centers", "EBT Location", "EBT Location w/ Fresh Produce"),
-    baseGroups = c("Poverty", "Median Household Income", "Unemployment", "Bachelor's Degree", "Population Density"),
-    options = layersControlOptions(collapsed = FALSE))
+    overlayGroups = c("Adult Learning Centers", "Substance Abuse Facilities", "Mental Health Centers", "EBT Location", "EBT Location w/ Fresh Produce", "TARC Routes", "Place Names", "Food Pantry", "Hot Meal"),
+    baseGroups = c("Poverty", "Median Household Income", "Unemployment", "High School or GED", "Associate's Degree", "Bachelor's Degree", "Population Density"),
+    options = layersControlOptions(collapsed = FALSE))%>%
+    hideGroup(c("Substance Abuse Facilities","Mental Health Centers", "Adult Learning Centers", "EBT Location", "EBT Location w/ Fresh Produce", "Food Pantry", "Hot Meal"))%>%
+    htmlwidgets::onRender("
+    function(el, x) {
+      this.on('baselayerchange', function(e) {
+        e.layer.bringToBack();
+      })
+    }
+  ")
 
-saveWidget(map1, "C:/users/natek/studio_gdrive/cfsi_map/cfsi_census.html")
+saveWidget(map1, "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_leaflet.html")
 
+```
+
+
+```{r, eval = FALSE}
+map2 <- leaflet(cfsi_census) %>%
+  addTiles() %>%
+  addPolylines(data = cfsi_tarc, color = "black", weight = 2, group = "TARC Routes") %>%
+  addMarkers(data = fp_df, lat = ~Latitude, lng = ~Longitude, popup = ~fp_label, icon = fp_icon, 
+                   group = "Food Pantry",
+                   popupOptions = popupOptions(direction = "auto")) %>%
+  addMarkers(data = hm_df, lat = ~Latitude, lng = ~Longitude, popup = ~hm_label, icon = hm_icon, 
+                   group = "Hot Meal",
+                   popupOptions = popupOptions(direction = "auto")) %>%
+  addLayersControl(
+    overlayGroups = c("TARC Routes", "Food Pantry", "Hot Meal"),
+    options = layersControlOptions(collapsed = FALSE))%>%
+  hideGroup("TARC Routes")
+
+saveWidget(map2, "C:/Users/natek/studio_gdrive/github/cfsi_map/cf_food_pantries.html")
 
 ```
 
