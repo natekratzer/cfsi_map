@@ -18,7 +18,7 @@ library(tidyverse)
 
 Reading in Census Base Layers
 ```{r}
-cfsi_census <- readOGR(dsn = "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_shapefiles/shapefiles/Selected_Tract_Variables.shp", layer = "Selected_Tract_Variables",
+cfsi_census <- readOGR(dsn = "cfsi_shapefiles/shapefiles/Selected_Tract_Variables.shp", layer = "Selected_Tract_Variables",
                  GDAL1_integer64_policy = TRUE)
 ```
 
@@ -42,7 +42,6 @@ cfsi_census@data$assoc <- cfsi_census@data$PCT_Associ+cfsi_census@data$PCT_BA_or
 
 
 Labels for leaflet mapping
-
 ```{r}
 cfsi_census@data$l_line1 <- paste("Tract #:", cfsi_census@data$TRACT, "in")
 cfsi_census@data$l_line2 <- paste(cfsi_census@data$CNTY_name, "County")
@@ -135,22 +134,22 @@ pal_assoc <- colorNumeric(
 
 Overlay layers
 ```{r}
-cfsi_ebt <- readOGR(dsn = "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_shapefiles/shapefiles/EBT_and_Fresh_produce_locations.shp", layer = "EBT_and_Fresh_produce_locations",
+cfsi_ebt <- readOGR(dsn = "cfsi_shapefiles/shapefiles/EBT_and_Fresh_produce_locations.shp", layer = "EBT_and_Fresh_produce_locations",
                  GDAL1_integer64_policy = TRUE)
 
-cfsi_samhsa <- readOGR(dsn = "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_shapefiles/shapefiles/Samhsa_Facilities.shp", layer = "Samhsa_Facilities",
+cfsi_samhsa <- readOGR(dsn = "cfsi_shapefiles/shapefiles/Samhsa_Facilities.shp", layer = "Samhsa_Facilities",
                  GDAL1_integer64_policy = TRUE)
 
-cfsi_designated_places <- readOGR(dsn = "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_shapefiles/shapefiles/converted_census_designated_places.shp", layer = "converted_census_designated_places",
+cfsi_designated_places <- readOGR(dsn = "cfsi_shapefiles/shapefiles/converted_census_designated_places.shp", layer = "converted_census_designated_places",
                  GDAL1_integer64_policy = TRUE)
 
-cfsi_alc <- readOGR(dsn = "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_shapefiles/shapefiles/Adult_Learning_Centers.shp", layer = "Adult_Learning_Centers",
+cfsi_alc <- readOGR(dsn = "cfsi_shapefiles/shapefiles/Adult_Learning_Centers.shp", layer = "Adult_Learning_Centers",
                  GDAL1_integer64_policy = TRUE)
 
-cfsi_tarc <- readOGR(dsn = "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_shapefiles/shapefiles/converted_tarc.shp", layer = "converted_tarc",
+cfsi_tarc <- readOGR(dsn = "cfsi_shapefiles/shapefiles/converted_tarc.shp", layer = "converted_tarc",
                  GDAL1_integer64_policy = TRUE)
 
-cfsi_food_pantry <- readOGR(dsn = "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_shapefiles/shapefiles/Hotmeal_and_Food_Pantry_services.shp", layer = "Hotmeal_and_Food_Pantry_services",
+cfsi_food_pantry <- readOGR(dsn = "cfsi_shapefiles/shapefiles/Hotmeal_and_Food_Pantry_services.shp", layer = "Hotmeal_and_Food_Pantry_services",
                  GDAL1_integer64_policy = TRUE)
 
 
@@ -418,10 +417,9 @@ map1 <- leaflet(cfsi_census) %>%
     }
   ")
 
-saveWidget(map1, "C:/Users/natek/studio_gdrive/github/cfsi_map/cfsi_leaflet.html")
+saveWidget(map1, "cfsi_map/cfsi_leaflet_test.html")
 
 ```
-
 
 ```{r, eval = FALSE}
 map2 <- leaflet(cfsi_census) %>%
@@ -438,7 +436,7 @@ map2 <- leaflet(cfsi_census) %>%
     options = layersControlOptions(collapsed = FALSE))%>%
   hideGroup("TARC Routes")
 
-saveWidget(map2, "C:/Users/natek/studio_gdrive/github/cfsi_map/cf_food_pantries.html")
+saveWidget(map2, "cfsi_map/cf_food_pantries_test.html")
 
 ```
 
