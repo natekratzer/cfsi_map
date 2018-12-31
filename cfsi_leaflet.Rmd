@@ -132,50 +132,48 @@ pal_assoc <- colorNumeric(
 )
 ```
 
-Overlay layers
+UPDATED OVERLAY LAYERS
 ```{r}
-cfsi_ebt <- readOGR(dsn = "cfsi_shapefiles/shapefiles/EBT_and_Fresh_produce_locations.shp", layer = "EBT_and_Fresh_produce_locations",
-                 GDAL1_integer64_policy = TRUE)
+#new
+cfsi_ebt <- readxl::read_excel("CFSI_Mapping_File.xlsx", sheet = "USDA EBT and Fresh Produce")
+cfsi_samhsa <- readxl::read_excel("CFSI_Mapping_File.xlsx", sheet = "SAMHSA Selected counties")
+cfsi_alc <- readxl::read_excel("CFSI_Mapping_File.xlsx", sheet = "IN DWD Adult Education Centers")
+cfsi_food_pantry <- readxl::read_excel("CFSI_Mapping_File.xlsx", sheet = "Food Pantry and Hotmeal Service")
 
-cfsi_samhsa <- readOGR(dsn = "cfsi_shapefiles/shapefiles/Samhsa_Facilities.shp", layer = "Samhsa_Facilities",
-                 GDAL1_integer64_policy = TRUE)
-
+#unchanged
 cfsi_designated_places <- readOGR(dsn = "cfsi_shapefiles/shapefiles/converted_census_designated_places.shp", layer = "converted_census_designated_places",
-                 GDAL1_integer64_policy = TRUE)
-
-cfsi_alc <- readOGR(dsn = "cfsi_shapefiles/shapefiles/Adult_Learning_Centers.shp", layer = "Adult_Learning_Centers",
                  GDAL1_integer64_policy = TRUE)
 
 cfsi_tarc <- readOGR(dsn = "cfsi_shapefiles/shapefiles/converted_tarc.shp", layer = "converted_tarc",
                  GDAL1_integer64_policy = TRUE)
-
-cfsi_food_pantry <- readOGR(dsn = "cfsi_shapefiles/shapefiles/Hotmeal_and_Food_Pantry_services.shp", layer = "Hotmeal_and_Food_Pantry_services",
-                 GDAL1_integer64_policy = TRUE)
-
-
 ```
+
 
 Prepping overlay data
 ```{r}
-ebt_df <- subset(cfsi_ebt@data, County == "CLARK" | County == "FLOYD")
-ebt_fresh_df <- subset(ebt_df, Sells_fres == 1)
-cfsi_samhsa <- cfsi_samhsa[cfsi_samhsa@data$county == "Clark" | cfsi_samhsa@data$county == "Floyd", ]
-sa_df <- subset(cfsi_samhsa@data, type_facil == "SA")
-mh_df <- subset(cfsi_samhsa@data, type_facil == "MH")
-cfsi_alc <- cfsi_alc[1:10, ] #rows 11 to 16 are full of NAs and zeros
-cfsi_alc <- cfsi_alc[cfsi_alc@data$County == "Clark" | cfsi_alc@data$County == "Floyd", ]
+ebt_df <- subset(cfsi_ebt, County == "CLARK" | County == "FLOYD")
+ebt_fresh_df <- ebt_df %>%
+  filter(`Sells fresh produce 0=NO 1=YES` == 1)
+cfsi_samhsa <- cfsi_samhsa[cfsi_samhsa$county == "Clark" | cfsi_samhsa$county == "Floyd", ]
+sa_df <- subset(cfsi_samhsa, type_facil == "SA")
+mh_df <- subset(cfsi_samhsa, type_facil == "MH")
+cfsi_alc <- cfsi_alc[1:12, ] #rows 11 to 16 are full of NAs and zeros
+cfsi_alc <- cfsi_alc[cfsi_alc$County == "Clark" | cfsi_alc$County == "Floyd", ]
 
-#cfsi_food_pantry <- subset(cfsi_food_pantry@data, County == "CLARK" | County == "FLOYD")
-#might have to box out the ones out of those counties
-
-fp_df <- subset(cfsi_food_pantry@data, Food_Bank %in% c("FP", "HM-FP"))
-hm_df <- subset(cfsi_food_pantry@data, Food_Bank %in% c("HM", "HM-FP"))
+fp_df <- cfsi_food_pantry %>%
+  filter(`Food Bank or Hot Meal` %in% c("FP", "HM-FP"))
+fh_df <- cfsi_food_pantry %>%
+  filter(`Food Bank or Hot Meal` %in% c("HM", "HM-FP"))
 
 fp_df <- fp_df %>% 
   filter(Latitude != 0 & Longitude != 0)
 
 hm_df <- hm_df %>% 
   filter(Latitude != 0 & Longitude != 0)
+
+fp_df <- fp_df %>%
+  mutate(Longitude = as.numeric(Longitude),
+         Latitude = as.numeric(Latitude))
 
 fp_df <- fp_df %>%
   filter(Latitude <= 38.600 & Latitude >= 38.13 &
@@ -185,31 +183,19 @@ fp_df <- fp_df %>%
 hm_df <- hm_df %>%
   filter(Latitude <= 38.600 & Latitude >= 38.13 &
     Longitude >= -86.1 & Name != "Pekin Love Center Tabernacle of God Church")
-
-
-
 ```
 
 Labels for food pantries, hot meals, ebt, learning centers, mental health centers, and substance abuse facilities
 ```{r}
-# wrap_func <- function(x){paste(stri_wrap(x, 40), collapse = "</br>")}
-# 
-# fp_df$Foodbank_R <- lapply(fp_df$Foodbank_R, wrap_func)
-# hm_df$Foodbank_R <- lapply(hm_df$Foodbank_R, wrap_func)
-# 
-# fp_df$hours_of_o <- lapply(fp_df$hours_of_o, wrap_func)
-# hm_df$hours_of_o <- lapply(hm_df$hours_of_o, wrap_func)
-
-
 fp_l_1 <- fp_df$Name
 fp_l_2 <- fp_df$Address
-fp_l_3 <- paste("Hours:", fp_df$hours_of_o)
-fp_l_4 <- paste("Restrictions:", fp_df$Foodbank_R)
+fp_l_3 <- paste("Hours:", fp_df$`hours of operation_txt`)
+fp_l_4 <- paste("Restrictions:", fp_df$`Foodbank Receipt Condition and Notes`)
 
 hm_l_1 <- hm_df$Name
 hm_l_2 <- hm_df$Address
-hm_l_3 <- paste("Hours:", hm_df$hours_of_o)
-hm_l_4 <- paste("Restrictions:", hm_df$Foodbank_R)
+hm_l_3 <- paste("Hours:", hm_df$`hours_of_operation_txt`)
+hm_l_4 <- paste("Restrictions:", hm_df$`Foodbank Receipt Condition and Notes`)
 
 ebt_l_1 <- ebt_df$Store_Name
 ebt_l_2 <- ebt_df$Address
@@ -227,11 +213,11 @@ sa_l_1 <- sa_df$name1
 sa_l_2 <- sa_df$street1
 sa_l_3 <- paste(sa_df$city, sa_df$state, sa_df$zip)
 
-alc_l_1 <- cfsi_alc@data$Location
-alc_l_2 <- cfsi_alc@data$Address_1
-alc_l_3 <- paste(cfsi_alc@data$City, "IN", cfsi_alc@data$ZIP)
-alc_l_4 <- paste("Phone:", cfsi_alc@data$Phone)
-alc_l_5 <- paste("Hours:", cfsi_alc@data$Hours_of_O)
+alc_l_1 <- cfsi_alc$Location
+alc_l_2 <- cfsi_alc$`Address 1`
+alc_l_3 <- paste(cfsi_alc$City, "IN", cfsi_alc$ZIP)
+alc_l_4 <- paste("Phone:", cfsi_alc$Phone)
+alc_l_5 <- paste("Hours:", cfsi_alc$`Hours of Operation`)
 
 fp_label <- sprintf(
   "<style> div.leaflet-popup-content {font-size:24px;}</style><strong/>%s</strong><br/><strong/>%s</strong><br/>%s<br/>%s",
@@ -290,37 +276,37 @@ places_lat_long$html_label <- sprintf(
 Making Icons
 ```{r}
 mental_health_icon <- makeIcon(
-  "C:/Users/natek/studio_gdrive/github/cfsi_map/public_health.png",
+  "public_health.png",
   iconWidth = 20, iconHeight = 20
 )
 
 sa_icon <- makeIcon(
-  "C:/Users/natek/studio_gdrive/github/cfsi_map/bed_icon.png",
+  "bed_icon.png",
   iconWidth = 20, iconHeight = 20
 )
 
 ebt_icon <- makeIcon(
-  "C:/Users/natek/studio_gdrive/github/cfsi_map/snap_logo.png",
+  "snap_logo.png",
   iconWidth = 20, iconHeight = 20
 )
 
 alc_icon <- makeIcon(
-  "C:/Users/natek/studio_gdrive/github/cfsi_map/grad_hat.png",
+  "grad_hat.png",
   iconWidth = 20, iconHeight = 20
 )
 
 produce_icon <- makeIcon(
-  "C:/Users/natek/studio_gdrive/github/cfsi_map/orange_icon.png",
+  "orange_icon.png",
   iconWidth = 20, iconHeight = 20
 )
 
 fp_icon <- makeIcon(
-  "C:/Users/natek/studio_gdrive/github/cfsi_map/fp_icon.png",
+  "fp_icon.png",
   iconWidth = 20, iconHeight = 20
 )
 
 hm_icon <- makeIcon(
-  "C:/Users/natek/studio_gdrive/github/cfsi_map/hm_icon.png",
+  "hm_icon.png",
   iconWidth = 20, iconHeight = 20
 )
 ```
@@ -392,7 +378,7 @@ map1 <- leaflet(cfsi_census) %>%
                    group = "Substance Abuse Facilities")%>%
   addMarkers(data = mh_df, lat = ~latitude, lng = ~longitude, popup = ~mh_label, icon = mental_health_icon,
                    group = "Mental Health Centers") %>%
-  addMarkers(data = cfsi_alc@data, lat = ~Latitude, lng = ~Longitude, popup = ~alc_label, icon = alc_icon, 
+  addMarkers(data = cfsi_alc, lat = ~Latitude, lng = ~Longitude, popup = ~alc_label, icon = alc_icon, 
                    group = "Adult Learning Centers") %>%
   addMarkers(data = ebt_df, lat = ~Latitude, lng = ~Longitude, popup = ~ebt_label, icon = ebt_icon, 
                    group = "EBT Location") %>%
@@ -417,7 +403,7 @@ map1 <- leaflet(cfsi_census) %>%
     }
   ")
 
-saveWidget(map1, "cfsi_map/cfsi_leaflet_test.html")
+saveWidget(map1, "cfsi_leaflet_update.html")
 
 ```
 
